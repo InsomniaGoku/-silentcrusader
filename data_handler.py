@@ -19,11 +19,12 @@ class Tick:
 
     """
     def __init__(self):
-        self.handlers["csv"] = self.read_from_csv
-        self.handlers["wind"]= self.read_from_wind
-        self.output_handler   = print # default output, just print these shit
-        self.std_format       = ["ticker","date","time","volume","bid1","ask1","bsize1","asize1"]
-        self.data             = pd.DataFrame()
+        self.handlers = {"csv": self.read_from_csv, "wind": self.read_from_wind}
+        #self.handlers["csv"] = self.read_from_csv
+        #self.handlers["wind"] = self.read_from_wind
+        self.output_handler = print # default output, just print these shit
+        self.std_format = ["ticker","date","time","volume","bid1","ask1","bsize1","asize1"]
+        self.data = pd.DataFrame()
 
 
     def format(self,the_format):
