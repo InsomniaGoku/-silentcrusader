@@ -14,7 +14,7 @@ def implied_volatility( model, args, CallPrice=None, PutPrice=None, high=500.0, 
         target = CallPrice
     if PutPrice:
         target = PutPrice
-    #accuracy
+    # accuracy
     epsilon = 0.005
     decimals = 2
     for i in range( 10000 ):  # To avoid infinite loops
@@ -192,9 +192,11 @@ class BS:
                (self.strikePrice / \
                 ((1 + self.interestRate) ** self.daysToExpiration))
 
-    def update( self, **kwargs):
+    def update( self, update_data ):
         '''use to accept parameter update from market'''
-        self.__dict__.update(kwargs)
+        self.__dict__.update( {'underlyingPrice':update_data['BP1']} )
+        print self._price()
+
 
 class merton:
     '''merton
@@ -369,9 +371,9 @@ class merton:
                (self.strikePrice / \
                 ((1 + self.interestRate) ** self.daysToExpiration))
 
-    def update( self, **kwargs):
+    def update( self, update_data ):
         '''use to accept parameter update from market'''
-        self.__dict__.update(kwargs)
+        self.__dict__.update( update_data )
 
 
 class g_k:
@@ -558,7 +560,6 @@ class g_k:
                (self.strikePrice / \
                 ((1 + self.domesticRate) ** self.daysToExpiration))
 
-    def update( self, **kwargs):
+    def update( self, update_data ):
         '''use to accept parameter update from market'''
-        self.__dict__.update(kwargs)
-
+        self.__dict__.update( update_data )

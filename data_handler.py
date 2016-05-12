@@ -1,6 +1,6 @@
 from __future__ import print_function
 import pandas as pd
-import pandas_datareader as pd_datareader
+#import pandas_datareader as pd_datareader
 
 # current data source:
 # 1. Wind terminal with python api. (Chinese)
@@ -57,7 +57,7 @@ class Tick:
 
     def read_from_csv(self, filepath):
         """ convert data from csv file into pandas.dataframe"""
-        data = pd.read_csv(filepath,index_col=2,skiprows=1) # based on current file format.use time column as index
+        data = pd.read_csv(filepath,index_col=0,skiprows=0) # based on current file format.use time column as index
         return data[self.std_format]
 
     def read_from_wind(self, data):
