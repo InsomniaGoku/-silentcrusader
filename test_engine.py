@@ -10,7 +10,7 @@ s.desc()
 # init option model:
 call = BS((0.0971,0.1,0,30),16)
 print(call._price())
-filepath = "C:\Users\Jianing Song\Documents\mkt_data\\50etf\Opt_Tick_201604\\20160401\OP10000449.csv"
+filepath = "C:\Users\Jianing Song\Documents\mkt_data\\50etf\option\\20160401\OP10000449.csv"
 
 mktdata = Tick()
 
