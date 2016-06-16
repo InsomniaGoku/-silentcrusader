@@ -53,7 +53,7 @@ class Tick:
         """behave like a market data generator, call target receiver function in loop. """
         self.output = self.output_handler[output_format]
         for i,row in self.data.iterrows():
-            self.output(row)
+            self.output(i,row)
 
     def read_from_csv(self, filepath):
         """ convert data from csv file into pandas.dataframe"""

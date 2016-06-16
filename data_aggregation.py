@@ -1,7 +1,7 @@
 import pandas
 import datetime
-option_file_dict = {'CALL':"C:\Users\Jianing Song\Documents\mkt_data\\50etf\option\\20160401\OP10000564.csv",\
-              'PUT':"C:\Users\Jianing Song\Documents\mkt_data\\50etf\option\\20160401\OP10000563.csv"}
+option_file_dict = {'CALL':"C:\Users\Jianing Song\Documents\mkt_data\\50etf\option\\20160401\OP10000579.csv",\
+              'PUT':"C:\Users\Jianing Song\Documents\mkt_data\\50etf\option\\20160401\OP10000584.csv"}
 etf_file = "C:\Users\Jianing Song\Documents\mkt_data\\50etf\etf\sh510050_20160401.csv"
 
 mapping_tags = ['CALL','PUT','ETF']
@@ -38,6 +38,8 @@ for each in option_file_dict.keys():
     print tmp_df.index
 aggregated_data_feed = etf.join(reader_list,how='outer')
 aggregated_data_feed = aggregated_data_feed.fillna(method='ffill')
+
+aggregated_data_feed = aggregated_data_feed[aggregated_data_feed.Price>0]
 print aggregated_data_feed
 
 # check all data frames.

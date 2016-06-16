@@ -76,8 +76,18 @@ class BS:
         for i in [ 'CallPrice', 'PutPrice', 'CallDelta', 'PutDelta', \
                    'CallDelta2', 'PutDelta2', 'CallTheta', 'PutTheta', \
                    'CallRho', 'PutRho', 'vega', 'gamma', 'impliedVolatility', \
-                   'PutCallParity' ]:
+                   'PutCallParity','UpdateTime' ]:
             self.__dict__[ i ] = None
+        self.arbitrage_series = []
+        self.position = 0
+        self.theo_adjustment = 0
+        self.theo_adjustment_step = -0.015
+        self.position_limit = 3
+        self.maxposition = self.position_limit
+        self.minposition = -self.position_limit
+        self.prev_parity = 0
+        self.Returns = 0
+        self.cumulative_Returns = 0
 
         if volatility:
             self.volatility = float( volatility ) / 100
@@ -188,16 +198,47 @@ class BS:
 
     def _parity( self ):
         '''Put-Call Parity'''
-        return self.CallPrice - self.PutPrice - self.underlyingPrice + \
-               (self.strikePrice / \
-                ((1 + self.interestRate) ** self.daysToExpiration))
+        #return self.CallPrice - self.PutPrice - self.underlyingPrice + \
+        #       (self.strikePrice / \
+        #        ((1 + self.interestRate) ** self.daysToExpiration))
+        #print (self.strikePrice/( -self.CallPrice + self.PutPrice + self.underlyingPrice))
+        return (self.strikePrice/( -self.CallPrice + self.PutPrice + self.underlyingPrice) - 1)\
+               * (1/self.daysToExpiration)
 
-    def update( self, update_data ):
+    def update( self,update_time, update_data ):
         '''use to accept parameter update from market'''
-        self.__dict__.update( {'underlyingPrice':update_data['BP1']} )
-        print self._price()
+        #print 'underlying',(update_data['BP1']+update_data['SP1'])/2
+        #print 'call ',(update_data['CALLBP1']+update_data['CALLSP1'])/2
+        #print 'put ',(update_data['PUTBP1']+update_data['PUTSP1'])/2
+        self.__dict__.update( {'underlyingPrice':(update_data['BP1']+update_data['SP1'])/2,
+                               'CallPrice':(update_data['CALLBP1']+update_data['CALLSP1'])/2,
+                               'PutPrice':(update_data['PUTBP1']+update_data['PUTSP1'])/2,
+                              'UpdateTime':update_time}
+                              )
+        #print self._price()
+        print self._parity()
+        self.Returns = self.position*( - self.prev_parity + self._parity())/self.position_limit/365
+        self.cumulative_Returns += self.Returns
+        Trade = False
 
-
+        if self._parity() > 0.05+self.position*self.theo_adjustment_step:
+            if self.position == self.minposition:
+                Trade = False
+            else:
+                self.position  = max((self.position - 1),self.minposition)
+                Trade = True
+        if self._parity() < -0.05+self.position*self.theo_adjustment_step:
+            if self.position==self.maxposition:
+                Trade = False
+            else:
+                self.position  = min((self.position + 1),self.maxposition)
+                Trade = True
+        if Trade==True:
+            self.prev_parity = self._parity()
+            self.arbitrage_series.append({'Time':self.UpdateTime,'Rate':self._parity(),'Position':self.position,
+                                        'Return':self.Returns,'CumR':self.cumulative_Returns})
+        self.Returns = 0
+        Trade = False
 class merton:
     '''merton
 	Used for pricing European options on stocks with dividends
