@@ -2,6 +2,7 @@ from data_handler import *
 from option_model import implied_volatility,BS
 from Strategy import *
 import pandas
+import numpy as np
 import datetime
 from WindPy import *
 
@@ -21,10 +22,25 @@ class WindEngine():
         w.start()
         products_str = ','.join(self.products)
         fields_str   = ','.join(self.fields)
+        print "Downloading historical data from data source..."
+        self.get_stats()
         print "Subscribe data fields ",fields_str," of ",products_str," from Wind api"
         w.wsq(products_str,fields_str,func=self.market_update)
         while w.isconnected():
             sys_message = "API is still running is other thread..."
+
+    def get_stats(self,stats="ma"):
+        w.start()
+        if stats == "ma":
+            lgth = 150
+            for each in self.products:
+                histo = (w.wsd(each,"close", datetime.today()-timedelta(lgth))).Data[0]
+                self.mkt_data[each]["ma_120"] = np.mean(histo[lgth - 120: ])
+                self.mkt_data[each]["ma_60"] = np.mean(histo[lgth - 60: ])
+                self.mkt_data[each]["ma_20"] = np.mean(histo[lgth - 20: ])
+                print "Getting MA for ", each, "....\n"
+        w.stop()
+
 
     def market_update(self,wind_data):
         #print wind_data # for test use. Display all data
