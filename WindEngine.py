@@ -6,8 +6,8 @@ import numpy as np
 import datetime
 from WindPy import *
 
-def default_update(data):
-    print data
+def default_update((data,keys)):
+    print len(keys), " tickers updated successfully..."
 
 
 class WindEngine():
@@ -16,14 +16,20 @@ class WindEngine():
         self.products = products
         self.fields   = fields
         self.update_func = update_func
-        self.mkt_data = dict.fromkeys(products,dict.fromkeys(fields)) # it is actually a snapshot
+        self.mkt_data = {}
+        for each_p in products:
+            snapshot = {}
+            for each_f in fields:
+                snapshot[each_f] = 0
+            self.mkt_data[each_p] = snapshot
+        #self.mkt_data = dict.fromkeys(products,dict.fromkeys(fields)) # it is actually a snapshot
 
     def run(self):
-        w.start()
         products_str = ','.join(self.products)
         fields_str   = ','.join(self.fields)
         print "Downloading historical data from data source..."
         self.get_stats()
+        w.start()
         print "Subscribe data fields ",fields_str," of ",products_str," from Wind api"
         w.wsq(products_str,fields_str,func=self.market_update)
         while w.isconnected():
@@ -32,15 +38,17 @@ class WindEngine():
     def get_stats(self,stats="ma"):
         w.start()
         if stats == "ma":
-            lgth = 150
+            lgth = 300
             for each in self.products:
                 histo = (w.wsd(each,"close", datetime.today()-timedelta(lgth))).Data[0]
-                self.mkt_data[each]["ma_120"] = np.mean(histo[lgth - 120: ])
-                self.mkt_data[each]["ma_60"] = np.mean(histo[lgth - 60: ])
-                self.mkt_data[each]["ma_20"] = np.mean(histo[lgth - 20: ])
-                print "Getting MA for ", each, "....\n"
+                list_len = len(histo)   # windapi uses calendar day as input but return business day's data
+                #print len(histo)
+                self.mkt_data[each]["ma_120"] = np.mean(histo[list_len - 120: ])
+                self.mkt_data[each]["ma_60"] = np.mean(histo[list_len - 60: ])
+                self.mkt_data[each]["ma_20"] = np.mean(histo[list_len - 20: ])
+                print "Getting MA for ", each, self.mkt_data[each]["ma_120"],self.mkt_data[each]["ma_60"],self.mkt_data[each]["ma_20"],"....\n"
         w.stop()
-
+        #print self.mkt_data
 
     def market_update(self,wind_data):
         #print wind_data # for test use. Display all data
@@ -50,12 +58,14 @@ class WindEngine():
             return()
         else:
             tmp_products = wind_data.Codes
+            # print len(tmp_products), "tickers received in this update message...",tmp_products
             for k in range(len(wind_data.Fields)):
                 for j in range(len(tmp_products)):
                     #print tmp_products[j],wind_data.Fields[k],wind_data.Data[k][j]
                     self.mkt_data[tmp_products[j]][wind_data.Fields[k]] = wind_data.Data[k][j]
             # should generate a dict of mkt data and call update_func from whatever model you want to use
-            self.update_func(self.mkt_data)
+            #print self.mkt_data
+            self.update_func((self.mkt_data,tmp_products))
 
 if __name__ == "__main__":
     products = ["10000641.SH","1000642.SH","510050.SH"]
